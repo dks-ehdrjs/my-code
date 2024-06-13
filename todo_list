@@ -1,0 +1,220 @@
+#define _CRT_SECURE_NO_WARNINGS 
+#include <stdio.h>
+#include<stdlib.h>
+#include <time.h>
+#include<string.h>
+#include<windows.h>
+
+struct Schedule {  // 일정 구조체 선언
+    char* list;
+    Schedule* next;
+};
+
+Schedule* head = NULL;
+
+
+void addSchedule();
+void disPlaySchedule();
+void deleteSchedule(char *sch);
+void addScheduleFront();
+void deleteAllSchedule();
+
+int main() {
+    int choice;
+    char choice_menu[255];
+
+    while (1) {
+
+        system("cls");
+
+        time_t t = time(NULL);
+        struct tm tm; // time 헤더파일에 정의
+        if (localtime_s(&tm, &t) != 0) { // localtime_s() 사용
+            perror("localtime_s");
+            return 1;
+        }
+        printf("\n\n\t\tDate: %04d-%02d-%02d\n",
+            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday); /////////////////////////// 메뉴에 시간을 넣기 위한 함수
+
+
+        printf("\n\n    =================== < To-do list MENU > ===================\n");
+        printf("\n\n\t\t1. 일정 보기\n");
+        printf("\n\n\t\t2. 일정 추가\n");
+        printf("\n\n\t\t3. 일정 삭제\n");
+        printf("\n\n\t\t4. 우선 일정 추가\n");
+        printf("\n\n\t\t5. 모든 일정 삭제\n");
+        printf("\n\n\t\t6. 종료\n");
+        printf("\n\n    ===========================================================\n");
+        printf("\n\n\t\t메뉴 선택:[ ]\b\b");
+
+       
+        fgets(choice_menu, sizeof(choice_menu), stdin);  // 입력받는 과정은 전부 fgets로 받고, 개행문자 삭제하는 과정으로 묶어서 통일 하였음. 
+        choice_menu[strcspn(choice_menu, "\n")] = '\0';
+        sscanf(choice_menu, "%d", &choice);
+
+
+        switch (choice) {
+        case 1:
+            disPlaySchedule(); // 스케줄 확인
+            break;
+        case 2:
+            addSchedule(); // 일정 추가
+            break;
+        case 3:
+            printf("\n\n\t\t삭제할 일정을 그대로 입력하세요: ");
+            char sch[255];
+            fgets(sch, 255, stdin); 
+            sch[strcspn(sch,"\n")] = '\0'; // 개행 문자 제거
+            deleteSchedule(sch); // 일정 삭제
+            break;
+        case 4:
+            addScheduleFront(); // 우선 일정 추가
+            break;
+        case 5:
+            deleteAllSchedule(); // 모든 일정 삭제
+            break;
+        case 6:
+            exit(0); // 종료
+            break;
+        default:
+            printf("\n\n\t\t아직 없는 메뉴입니다 ");
+            break;
+
+        }
+        system("pause");
+    }
+    
+}
+
+void addSchedule()
+{
+    char contents[255];
+    struct Schedule* newNode, * curNode; // curNode를 포인터로 선언
+    newNode = (Schedule*)malloc(sizeof(Schedule)); // 동적할당으로 노드 생성
+   
+    
+    printf("\n\n\t\t추가하실 일정을 입력하세요: ");
+   
+    fgets(contents,sizeof(contents),stdin); // 띄어쓰기를 포함한 문자열을 받기위함
+    contents[strcspn(contents,"\n")] = '\0'; // 개행 문자 제거
+    newNode->list = (char*)malloc(sizeof(char) * (strlen(contents) + 1)); // 입력받은 문자열 동적할당
+    strcpy(newNode->list, contents);  // 리스트에  입력받은 contents 넘겨받기
+    newNode->next = NULL;
+
+
+    // 처음 생성된 노드인지 확인
+    if (head == NULL) { // 맨 처음 노드인 경우
+        head = newNode;
+        printf("\n\n\t\t<< 첫 일정추가 >>\n\n");
+        return; 
+    }
+    else { // 생성된 노드가 있는 경우
+        curNode = head;
+        while (curNode->next != NULL) {
+            curNode = curNode->next;
+        }
+        curNode->next = newNode;
+        printf("\n\n\t\t<< 그 다음 일정 추가 >>\n\n");
+        return;
+    }
+}
+
+void disPlaySchedule()
+{
+    Schedule* curNode;
+    if (head == NULL) {
+        printf("\n\n\t\t<< 아직 추가 된 일정이 없습니다 >>\n\n"); 
+        return;
+    }
+    else {
+        curNode = head;
+        while (curNode->next != NULL) {
+            printf("\n\n\t\t%s\n", curNode->list);
+            curNode = curNode->next;
+        }
+        printf("\n\n\t\t%s\n", curNode->list);
+        return;
+    }
+}
+
+void deleteSchedule(char *sch)
+{
+    Schedule* prevNode, *delNode;
+
+    // 1. 삭제할 일정이 없는 경우
+    if (head == NULL) { 
+        printf("\n\n\t\t<< 아직 추가 된 일정이 없습니다 >>\n");
+        return;
+    }
+
+    // 2. 삭제할 일정이 첫 번째인 경우
+    else if(strcmp(head->list,sch)==0){
+        delNode = head;
+        head = head->next;
+        free(delNode->list); // 동적할당 한 문자열 먼저 삭제 후
+        free(delNode); // 생성 한 노드 삭제
+        printf("\n\n\t\t<< 첫 일정 삭제 >>\n");
+        return;
+    }
+    // 3. 삭제할 일정이 중간에 있는 경우
+    prevNode = delNode = head;
+   
+    while (prevNode->next != NULL) {
+        delNode = prevNode->next;
+        if (strcmp(delNode->list, sch) == 0) {
+            prevNode->next = delNode->next; // 삭제할 노드 앞 뒤의 노드 먼저 이어주고
+            free(delNode->list); // 그 다음 삭제
+            free(delNode);
+            printf("\n\n\t\t<< 중간 일정 삭제 >>\n");
+            return;
+        }
+        else {
+            prevNode = delNode; // 다시 두개의 포인터를 맞춰준다
+        }
+    }
+  
+}
+
+void addScheduleFront()
+{
+    char contents[255];
+    Schedule* newNode = (Schedule*)malloc(sizeof(Schedule));
+    
+    printf("\n\n\t\t우선으로 추가하실 일정을 입력하세요: ");
+    fgets(contents, sizeof(contents), stdin); 
+    contents[strcspn(contents,"\n")] = '\0'; // fgets()로 입력 받은 후 개행문자 제거
+    newNode->list = (char*)malloc(sizeof(char) * (strlen(contents) + 1)); // 입력받은 문자열 동적할당
+    strcpy(newNode->list, contents);
+    newNode->next = NULL;
+
+    if (head == NULL) { // 일정이 아직 없는 경우
+        head = newNode;
+        printf("\n\n\t\t<< 첫 우선 일정 추가 >>\n");
+        return;
+    }
+    else {
+        newNode->next = head;
+        head = newNode;
+        printf("\n\n\t\t<< 우선 일정 추가 >>\n");
+    }
+
+}
+
+void deleteAllSchedule()
+{
+    Schedule* delNode;
+    if (head == NULL) {
+        printf("\n\n\t\t<< 아직 추가 된 일정이 없습니다 >>\n");
+        return;
+    }
+    else {
+        while (head != NULL) {
+            delNode = head;
+            head = head->next;
+            free(delNode->list);
+            free(delNode);
+        }
+        printf("\n\n\t\t<< 모든 일정을 제거했습니다 >>\n");
+    }
+}
+
