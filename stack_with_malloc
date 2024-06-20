@@ -1,50 +1,71 @@
-#include <stdlib.h>
-#include <stdio.h>
-
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
 #define MAX_SIZE 5
 
+
+void push();
+void pop();
+
+int top = -1;
+int value = 0;
+int* arr[MAX_SIZE];
+
 int main() {
-    int* arr[MAX_SIZE]; // 정수 포인터 배열
     char select;
-    int top = -1;
-    int value; // 사용자 입력값을 저장할 변수
 
     while (1) {
-        printf("push(u) or pop(o): ");
-        scanf_s(" %c", &select); // 앞에 공백을 추가하여 앞의 공백 문자를 무시
+        printf("Push(u) or Pop(o):  ");
+        scanf(" %c", &select); // scanf_s에서 scanf로 변경 및 공백 추가
 
         if (select == 'u') {
-            if (top == MAX_SIZE - 1) {
-                printf("스택이 가득 찼습니다\n");
-            }
-            else {
-                printf("정수 입력: ");
-                scanf_s("%d", &value); // 사용자로부터 정수 값을 입력받음
-                int* num = (int*)malloc(sizeof(num)); // 정수를 위한 메모리를 동적 할당
-                if (num != NULL) {
-                    *num = value; // 할당된 메모리에 값을 저장
-                    top++;
-                    arr[top] = num; // 배열에 포인터를 저장
-                    printf("%d push\n", *num);
-                }
-                else {
-                    printf("메모리 할당 실패\n");
-                }
-            }
+            push();
         }
         else if (select == 'o') {
-            if (top == -1) {
-                printf("스택이 비어 있습니다\n");
-            }
-            else {
-                int* num = arr[top];
-                printf("%d pop\n", *num);
-                free(num); // 동적으로 할당된 메모리를 해제
-                top--;
-            }
+            pop();
         }
         else {
-            printf("유효하지 않은 선택입니다\n");
+            printf("잘못된 입력:\n");
         }
+        printf("\nstack: ");
+        for (int i = 0; i <= top; i++) {
+            printf("%d ", *arr[i]); // 포인터 해제
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
+
+void push() {
+    if (top == MAX_SIZE - 1) {
+        printf("stack full\n");
+    }
+    else {
+        printf("정수 입력: ");
+        scanf("%d", &value); // scanf_s에서 scanf로 변경
+        int* num = (int*)malloc(sizeof(int)); // sizeof(int)로 변경
+
+        if (num != NULL) {
+            *num = value;
+            top++;
+            arr[top] = num;
+            printf("%d push\n", value); // num에서 *num으로 변경
+        }
+        else {
+            printf("메모리 할당 실패\n");
+        }
+    }
+}
+
+void pop() {
+    if (top == -1) {
+        printf("stack empty\n");
+    }
+    else {
+        int* num = arr[top];
+        printf("%d pop\n", *num); // num에서 *num으로 변경
+        free(num);
+        top--;
     }
 }
